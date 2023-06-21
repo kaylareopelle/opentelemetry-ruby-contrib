@@ -13,6 +13,8 @@ module OpenTelemetry
       module Patches
         # Module to prepend to PG::Connection for instrumentation
         module Connection # rubocop:disable Metrics/ModuleLength
+          include OpenTelemetry::Instrumentation::Helpers::ObfuscationHelper
+
           PG::Constants::EXEC_ISH_METHODS.each do |method|
             define_method method do |*args|
               span_name, attrs = span_attrs(:query, *args)
@@ -129,7 +131,7 @@ module OpenTelemetry
           end
 
           def generated_postgres_regex
-            @generated_postgres_regex ||= Regexp.union(PG::Constants::POSTGRES_COMPONENTS.map { |component| PG::Constants::COMPONENTS_REGEX_MAP[component] })
+            @generated_postgres_regex ||= Regexp.union(PG::Constants::POSTGRES_COMPONENTS.map { |component| COMPONENTS_REGEX_MAP[component] })
           end
 
           def client_attributes

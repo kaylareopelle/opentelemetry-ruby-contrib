@@ -6,6 +6,8 @@ module OpenTelemetry
       module Patches
         # Module to prepend to Trilogy for instrumentation
         module Client # rubocop:disable Metrics/ModuleLength
+          include OpenTelemetry::Instrumentation::Helpers::ObfuscationHelper
+
           QUERY_NAMES = [
             'set names',
             'select',
@@ -25,16 +27,6 @@ module OpenTelemetry
           ].freeze
 
           QUERY_NAME_RE = Regexp.new("^(#{QUERY_NAMES.join('|')})", Regexp::IGNORECASE)
-
-          COMPONENTS_REGEX_MAP = {
-            single_quotes: /'(?:[^']|'')*?(?:\\'.*|'(?!'))/,
-            double_quotes: /"(?:[^"]|"")*?(?:\\".*|"(?!"))/,
-            numeric_literals: /-?\b(?:[0-9]+\.)?[0-9]+([eE][+-]?[0-9]+)?\b/,
-            boolean_literals: /\b(?:true|false|null)\b/i,
-            hexadecimal_literals: /0x[0-9a-fA-F]+/,
-            comments: /(?:#|--).*?(?=\r|\n|$)/i,
-            multi_line_comments: %r{\/\*(?:[^\/]|\/[^*])*?(?:\*\/|\/\*.*)}
-          }.freeze
 
           MYSQL_COMPONENTS = %i[
             single_quotes
