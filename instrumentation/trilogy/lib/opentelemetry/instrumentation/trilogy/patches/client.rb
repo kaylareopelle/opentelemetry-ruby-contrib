@@ -5,40 +5,8 @@ module OpenTelemetry
     module Trilogy
       module Patches
         # Module to prepend to Trilogy for instrumentation
-        module Client # rubocop:disable Metrics/ModuleLength
-          include OpenTelemetry::Instrumentation::Helpers::ObfuscationHelper
-
-          QUERY_NAMES = [
-            'set names',
-            'select',
-            'insert',
-            'update',
-            'delete',
-            'begin',
-            'commit',
-            'rollback',
-            'savepoint',
-            'release savepoint',
-            'explain',
-            'drop database',
-            'drop table',
-            'create database',
-            'create table'
-          ].freeze
-
-          QUERY_NAME_RE = Regexp.new("^(#{QUERY_NAMES.join('|')})", Regexp::IGNORECASE)
-
-          MYSQL_COMPONENTS = %i[
-            single_quotes
-            double_quotes
-            numeric_literals
-            boolean_literals
-            hexadecimal_literals
-            comments
-            multi_line_comments
-          ].freeze
-
-          FULL_SQL_REGEXP = Regexp.union(MYSQL_COMPONENTS.map { |component| COMPONENTS_REGEX_MAP[component] })
+        module Client
+          include OpenTelemetry::Instrumentation::Helpers::MysqlHelper
 
           def query(sql)
             tracer.in_span(
@@ -72,34 +40,6 @@ module OpenTelemetry
             attributes
           end
 
-          def obfuscate_sql(sql)
-            if sql.size > config[:obfuscation_limit]
-              first_match_index = sql.index(FULL_SQL_REGEXP)
-              truncation_message = "SQL truncated (> #{config[:obfuscation_limit]} characters)"
-              return truncation_message unless first_match_index
-
-              truncated_sql = sql[..first_match_index - 1]
-              "#{truncated_sql}...\n#{truncation_message}"
-            else
-              obfuscated = OpenTelemetry::Common::Utilities.utf8_encode(sql, binary: true)
-              obfuscated = obfuscated.gsub(FULL_SQL_REGEXP, '?')
-              obfuscated = 'Failed to obfuscate SQL query - quote characters remained after obfuscation' if detect_unmatched_pairs(obfuscated)
-              obfuscated
-            end
-          rescue StandardError => e
-            OpenTelemetry.handle_error(message: 'Failed to obfuscate SQL', exception: e)
-            'OpenTelemetry error: failed to obfuscate sql'
-          end
-
-          def detect_unmatched_pairs(obfuscated)
-            # We use this to check whether the query contains any quote characters
-            # after obfuscation. If so, that's a good indication that the original
-            # query was malformed, and so our obfuscation can't reliably find
-            # literals. In such a case, we'll replace the entire query with a
-            # placeholder.
-            %r{'|"|\/\*|\*\/}.match(obfuscated)
-          end
-
           def database_span_name(sql) # rubocop:disable Metrics/CyclomaticComplexity
             case config[:span_name]
             when :statement_type
@@ -129,13 +69,6 @@ module OpenTelemetry
 
           def config
             Trilogy::Instrumentation.instance.config
-          end
-
-          def extract_statement_type(sql)
-            QUERY_NAME_RE.match(sql) { |match| match[1].downcase } unless sql.nil?
-          rescue StandardError => e
-            OpenTelemetry.logger.error("Error extracting sql statement type: #{e.message}")
-            nil
           end
         end
       end

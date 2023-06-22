@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 require_relative 'helpers/obfuscation_helper'
+require_relative 'helpers/mysql_helper'
 
 module OpenTelemetry
   module Instrumentation
