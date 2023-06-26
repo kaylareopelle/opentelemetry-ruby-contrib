@@ -75,8 +75,6 @@ module OpenTelemetry
           multi_line_comments
         ].freeze
 
-        UNMATCHED_PAIRS_REGEX = %r{'|\/\*|\*\/|\$(?!\?)}
-
         # These are all alike in that they will have a SQL statement as the first parameter.
         # That statement may possibly be parameterized, but we can still use it - the
         # obfuscation code will just transform $1 -> $? in that case (which is fine enough).

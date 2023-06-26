@@ -41,28 +41,12 @@ module OpenTelemetry
           multi_line_comments
         ].freeze
 
-        FULL_SQL_REGEXP = Regexp.union(MYSQL_COMPONENTS.map { |component| COMPONENTS_REGEX_MAP[component] })
+        def generated_regex
+          @generated_regex ||= Regexp.union(MYSQL_COMPONENTS.map { |component| COMPONENTS_REGEX_MAP[component] })
+        end
 
         private
 
-        def obfuscate_sql(sql)
-          if sql.size > config[:obfuscation_limit]
-            first_match_index = sql.index(FULL_SQL_REGEXP)
-            truncation_message = "SQL truncated (> #{config[:obfuscation_limit]} characters)"
-            return truncation_message unless first_match_index
-
-            truncated_sql = sql[..first_match_index - 1]
-            "#{truncated_sql}...\n#{truncation_message}"
-          else
-            obfuscated = OpenTelemetry::Common::Utilities.utf8_encode(sql, binary: true)
-            obfuscated = obfuscated.gsub(FULL_SQL_REGEXP, '?')
-            obfuscated = 'Failed to obfuscate SQL query - quote characters remained after obfuscation' if detect_unmatched_pairs(obfuscated)
-            obfuscated
-          end
-        rescue StandardError => e
-          OpenTelemetry.handle_error(message: 'Failed to obfuscate SQL', exception: e)
-          'OpenTelemetry error: failed to obfuscate sql'
-        end
 
         def detect_unmatched_pairs(obfuscated)
           # We use this to check whether the query contains any quote characters
