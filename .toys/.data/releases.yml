@@ -37,6 +37,10 @@ gems:
     directory: helpers/sql-obfuscation
     version_constant: [OpenTelemetry, Helpers, SqlObfuscation, VERSION]
 
+  - name: opentelemetry-instrumentation-gruf
+    directory: instrumentation/gruf
+    version_constant: [OpenTelemetry, Instrumentation, Gruf, VERSION]
+
   - name: opentelemetry-instrumentation-grape
     directory: instrumentation/grape
     version_constant: [OpenTelemetry, Instrumentation, Grape, VERSION]
