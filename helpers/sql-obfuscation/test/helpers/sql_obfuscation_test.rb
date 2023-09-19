@@ -32,6 +32,20 @@ describe OpenTelemetry::Helpers::SqlObfuscation do
       end
     end
 
+    describe 'when sql has marginalia-style prepended comments' do
+      let(:sql) do
+        '/*application:web,controller:blob,action:show,correlation_id:01EZVMR923313VV44ZJDJ7PMEZ,' \
+          'endpoint_id:Projects::BlobController#show*/ SELECT "routes".* FROM "routes" WHERE "routes"' \
+          '."source_id" = 75 AND "routes"."source_type" = \'Namespace\' LIMIT 1'
+      end
+
+      let(:expected) { '? SELECT ?.* FROM ? WHERE ?.? = ? AND ?.? = ? LIMIT ?' }
+
+      it 'obfuscates the comment' do
+        assert_equal(expected, obfuscate_sql)
+      end
+    end
+
     describe 'when sql exceeds obfuscation_limit' do
       let(:obfuscation_limit) { 42 }
       let(:expected) { "SELECT * from users where users.id = ...\nSQL truncated (> #{obfuscation_limit} characters)" }
