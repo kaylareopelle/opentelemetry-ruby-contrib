@@ -3,6 +3,7 @@
 # Copyright The OpenTelemetry Authors
 #
 # SPDX-License-Identifier: Apache-2.0module OpenTelemetry
+require 'opentelemetry-common'
 
 module OpenTelemetry
   module Helpers
@@ -36,7 +37,7 @@ module OpenTelemetry
         'create table'
       ].freeze
 
-      QUERY_NAME_REGEX = Regexp.new("(#{QUERY_NAMES.join('|')})", Regexp::IGNORECASE)
+      QUERY_NAME_REGEX = Regexp.new("\\b(#{QUERY_NAMES.join('|')})\\b", Regexp::IGNORECASE)
 
       # This is a span naming utility intended for use in MySQL database
       # adapter instrumentation.
@@ -62,6 +63,8 @@ module OpenTelemetry
 
       # @api private
       def self.extract_statement_type(sql)
+        sql = OpenTelemetry::Common::Utilities.utf8_encode(sql, binary: true)
+
         QUERY_NAME_REGEX.match(sql) { |match| match[1].downcase } unless sql.nil?
       rescue StandardError => e
         OpenTelemetry.handle_error(message: 'Error extracting SQL statement type', exception: e)

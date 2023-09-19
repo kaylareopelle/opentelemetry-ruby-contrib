@@ -93,6 +93,23 @@ describe OpenTelemetry::Helpers::MySQL do
       end
     end
 
+    describe 'when sql contains invalid byte sequences' do
+      let(:sql) { "SELECT * from users where users.id = 1 and users.email = 'test@test.com\255'" }
+
+      it 'extracts the statement' do
+        assert_equal('select', extract_statement_type)
+      end
+    end
+
+    describe 'when sql contains unknown query statement' do
+      let(:sql) { 'DESELECT 1' }
+
+      # nil sets the span name to 'mysql'
+      it 'returns nil' do
+        assert_nil(extract_statement_type)
+      end
+    end
+
     describe 'when sql has marginalia-style prepended comments' do
       let(:sql) do
         '/*application:web,controller:blob,action:show,correlation_id:01EZVMR923313VV44ZJDJ7PMEZ,' \
