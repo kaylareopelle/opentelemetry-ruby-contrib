@@ -68,8 +68,6 @@ module OpenTelemetry
       }.freeze
 
       PLACEHOLDER = '?'
-      UNMATCHED_PAIRS_FAILURE_MESSAGE = 'Failed to obfuscate SQL query - quote characters remained after obfuscation'
-      OBFUSCATION_FAILURE_MESSAGE = 'Failed to obfuscate SQL'
 
       # We use these to check whether the query contains any quote characters
       # after obfuscation. If so, that's a good indication that the original
@@ -119,12 +117,11 @@ module OpenTelemetry
         return truncate_statement(sql, regex, obfuscation_limit) if sql.size > obfuscation_limit
 
         sql = sql.gsub(regex, PLACEHOLDER)
-        return UNMATCHED_PAIRS_FAILURE_MESSAGE if CLEANUP_REGEX[adapter].match(sql)
+        return 'Failed to obfuscate SQL query - quote characters remained after obfuscation' if CLEANUP_REGEX[adapter].match(sql)
 
         sql
       rescue StandardError => e
-        OpenTelemetry.handle_error(message: OBFUSCATION_FAILURE_MESSAGE, exception: e)
-        "OpenTelemetry error: #{OBFUSCATION_FAILURE_MESSAGE}"
+        OpenTelemetry.handle_error(message: 'Failed to obfuscate SQL', exception: e)
       end
 
       # @api private

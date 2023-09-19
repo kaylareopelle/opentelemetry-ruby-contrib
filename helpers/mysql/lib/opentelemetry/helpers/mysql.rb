@@ -37,7 +37,6 @@ module OpenTelemetry
       ].freeze
 
       QUERY_NAME_REGEX = Regexp.new("^(#{QUERY_NAMES.join('|')})", Regexp::IGNORECASE)
-      EXTRACT_STATEMENT_FAILURE_MESSAGE = 'Error extracting SQL statement type'
 
       # This is a span naming utility intended for use in MySQL database
       # adapter instrumentation.
@@ -65,8 +64,7 @@ module OpenTelemetry
       def self.extract_statement_type(sql)
         QUERY_NAME_REGEX.match(sql) { |match| match[1].downcase } unless sql.nil?
       rescue StandardError => e
-        # TODO: Replace with `handle_error` Issue #609
-        OpenTelemetry.logger.error("#{EXTRACT_STATEMENT_FAILURE_MESSAGE}: #{e.message}")
+        OpenTelemetry.handle_error(message: 'Error extracting SQL statement type', exception: e)
         nil
       end
 

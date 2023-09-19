@@ -53,7 +53,7 @@ describe OpenTelemetry::Helpers::SqlObfuscation do
     describe 'when sql has unmatched quote' do
       let(:sql) { "SELECT * from users where users.id = 1 and users.email = 'test@test.com''" }
       it 'returns a failure message if unmatched pairs are present' do
-        assert_equal(OpenTelemetry::Helpers::SqlObfuscation::UNMATCHED_PAIRS_FAILURE_MESSAGE, obfuscate_sql)
+        assert_match(/Failed to obfuscate SQL/, obfuscate_sql)
       end
     end
 
