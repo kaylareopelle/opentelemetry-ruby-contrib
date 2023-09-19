@@ -131,18 +131,15 @@ describe OpenTelemetry::Helpers::MySQL do
     end
 
     describe 'when an error is raised' do
-      let(:sql) { 1 }
       it 'logs a message' do
         result = nil
         OpenTelemetry::TestHelpers.with_test_logger do |log_stream|
-          begin
-            result = extract_statement_type
-          rescue StandardError
-            # noop, let the error be caught
-          end
+          OpenTelemetry::Common::Utilities.stub(:utf8_encode, ->(_) { raise 'boom!' }) do
+            extract_statement_type
 
-          assert_nil(result)
-          assert_match(/Error extracting/, log_stream.string)
+            assert_nil(result)
+            assert_match(/Error extracting/, log_stream.string)
+          end
         end
       end
     end
