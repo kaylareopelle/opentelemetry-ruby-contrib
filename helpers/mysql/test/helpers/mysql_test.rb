@@ -93,6 +93,18 @@ describe OpenTelemetry::Helpers::MySQL do
       end
     end
 
+    describe 'when sql has marginalia-style prepended comments' do
+      let(:sql) do
+        '/*application:web,controller:blob,action:show,correlation_id:01EZVMR923313VV44ZJDJ7PMEZ,' \
+          'endpoint_id:Projects::BlobController#show*/ SELECT "routes".* FROM "routes" WHERE "routes"' \
+          '."source_id" = 75 AND "routes"."source_type" = \'Namespace\' LIMIT 1'
+      end
+
+      it 'finds the query name' do
+        assert_equal('select', extract_statement_type)
+      end
+    end
+
     describe 'when sql is nil' do
       let(:sql) { nil }
 

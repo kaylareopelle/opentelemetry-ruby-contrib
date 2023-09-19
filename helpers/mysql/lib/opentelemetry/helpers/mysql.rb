@@ -36,7 +36,7 @@ module OpenTelemetry
         'create table'
       ].freeze
 
-      QUERY_NAME_REGEX = Regexp.new("^(#{QUERY_NAMES.join('|')})", Regexp::IGNORECASE)
+      QUERY_NAME_REGEX = Regexp.new("(#{QUERY_NAMES.join('|')})", Regexp::IGNORECASE)
 
       # This is a span naming utility intended for use in MySQL database
       # adapter instrumentation.
