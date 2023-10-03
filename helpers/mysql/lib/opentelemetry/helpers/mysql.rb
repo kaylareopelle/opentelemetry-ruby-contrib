@@ -29,7 +29,7 @@ module OpenTelemetry
         'drop table',
         'explain',
         'insert',
-        'prepare statement',
+        'prepare',
         'release savepoint',
         'rollback',
         'savepoint',
