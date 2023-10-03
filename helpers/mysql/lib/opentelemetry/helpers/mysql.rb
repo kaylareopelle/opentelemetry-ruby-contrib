@@ -20,21 +20,22 @@ module OpenTelemetry
     # @api public
     class MySQL
       QUERY_NAMES = [
-        'set names',
-        'select',
-        'insert',
-        'update',
-        'delete',
         'begin',
         'commit',
-        'rollback',
-        'savepoint',
-        'release savepoint',
-        'explain',
+        'create database',
+        'create table',
+        'delete',
         'drop database',
         'drop table',
-        'create database',
-        'create table'
+        'explain',
+        'insert',
+        'prepare statement',
+        'release savepoint',
+        'rollback',
+        'savepoint',
+        'select',
+        'set names',
+        'update'
       ].freeze
 
       QUERY_NAME_REGEX = Regexp.new("\\b(#{QUERY_NAMES.join('|')})\\b", Regexp::IGNORECASE)
