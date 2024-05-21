@@ -20,6 +20,7 @@ module OpenTelemetry
 
         option :name, default: OpenTelemetry::Instrumentation::Logger::NAME, validate: :string
         option :version, default: OpenTelemetry::Instrumentation::Logger::VERSION, validate: :string
+        option :logger_provider, default: OpenTelemetry.logger_provider, validate: :string
 
         private
 

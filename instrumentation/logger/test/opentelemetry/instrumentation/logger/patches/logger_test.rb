@@ -74,6 +74,15 @@ describe OpenTelemetry::Instrumentation::Logger::Patches::Logger do
           assert_equal('5000', log_record.instrumentation_scope.version)
         end
       end
+
+      describe 'when a user configures logger_provider' do
+        let(:config) { { logger_provider: 'custom_logger' } }
+
+        it 'uses custom logger provider' do
+          # how do we test the logger provider?
+          skip 'TODO: write tests for configuration options'
+        end
+      end
     end
 
     it 'sets log record attributes based on the Ruby log' do

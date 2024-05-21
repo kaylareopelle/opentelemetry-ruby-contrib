@@ -18,7 +18,7 @@ module OpenTelemetry
             formatted_message = super(severity, datetime, progname, msg)
             return formatted_message if skip_instrumenting?
 
-            OpenTelemetry.logger_provider.logger(
+            Instrumentation.instance.config[:logger_provider].logger(
               name: Instrumentation.instance.config[:name],
               version: Instrumentation.instance.config[:version]
             ).on_emit(
