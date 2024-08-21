@@ -44,22 +44,22 @@ module OpenTelemetry
         boolean_literals: /\b(?:true|false|null)\b/i,
         hexadecimal_literals: /0x[0-9a-fA-F]+/,
         comments: /(?:#|--).*?(?=\r|\n|$)/i,
-        multi_line_comments: %r{(?:\/\*.*?\*\/)}m,
+        # multi_line_comments: %r{(?:\/\*.*?\*\/)}m,
         oracle_quoted_strings: /q'\[.*?(?:\]'|$)|q'\{.*?(?:\}'|$)|q'\<.*?(?:\>'|$)|q'\(.*?(?:\)'|$)/
       }.freeze
 
       DIALECT_COMPONENTS = {
         default: COMPONENTS_REGEX_MAP.keys,
         mysql: %i[single_quotes double_quotes numeric_literals boolean_literals
-                  hexadecimal_literals comments multi_line_comments],
+                  hexadecimal_literals comments],
         postgres: %i[single_quotes dollar_quotes uuids numeric_literals
-                     boolean_literals comments multi_line_comments],
+                     boolean_literals comments],
         sqlite: %i[single_quotes numeric_literals boolean_literals hexadecimal_literals
-                   comments multi_line_comments],
+                   comments],
         oracle: %i[single_quotes oracle_quoted_strings numeric_literals comments
-                   multi_line_comments],
+                  ],
         cassandra: %i[single_quotes uuids numeric_literals boolean_literals
-                      hexadecimal_literals comments multi_line_comments]
+                      hexadecimal_literals comments]
       }.freeze
 
       PLACEHOLDER = '?'
@@ -116,7 +116,9 @@ module OpenTelemetry
         # https://github.com/open-telemetry/opentelemetry-ruby-contrib/pull/345
         sql = OpenTelemetry::Common::Utilities.utf8_encode(sql, binary: true)
         return truncate_statement(sql, regex, obfuscation_limit) if sql.size > obfuscation_limit
-
+        # all_comments = Regexp.union(comment, multi_line_comment)
+        # sql = sql.gsub(/(.*?)(#{all_comments})/, "#{\1.gsub(regex, PLACEHOLDER)}#{\2}")
+        # Could write a sqlcommenter-specific approach to this instead, saving just traceparent
         sql = sql.gsub(regex, PLACEHOLDER)
         return 'Failed to obfuscate SQL query - quote characters remained after obfuscation' if CLEANUP_REGEX[adapter].match(sql)
 
