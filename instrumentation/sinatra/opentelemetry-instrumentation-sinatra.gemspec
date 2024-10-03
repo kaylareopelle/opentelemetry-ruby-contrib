@@ -26,8 +26,10 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = '>= 3.0'
 
   spec.add_dependency 'opentelemetry-api', '~> 1.0'
-  spec.add_dependency 'opentelemetry-instrumentation-base', '~> 0.22.1'
-  spec.add_dependency 'opentelemetry-instrumentation-rack', '~> 0.21'
+  # TODO: DO NOT MERGE THIS CHANGE. This is for testing.
+  # We need to use the branch's version of base and rack and can't specify that in the gemspec
+  # spec.add_dependency 'opentelemetry-instrumentation-base', '~> 0.22.1'
+  # spec.add_dependency 'opentelemetry-instrumentation-rack', path: '../rack'
 
   spec.add_development_dependency 'appraisal', '~> 2.5'
   spec.add_development_dependency 'bundler', '~> 2.4'
