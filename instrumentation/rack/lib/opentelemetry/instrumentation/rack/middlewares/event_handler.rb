@@ -157,6 +157,46 @@ module OpenTelemetry
             false
           end
 
+          # TODO: This one is long because I wanted to keep the stable semantic
+          # conventions, and (for now) emit attributes that matched the span
+          def record_http_server_request_duration_metric(span)
+            return unless metrics_enabled? && http_server_duration_histogram
+
+            # find span duration
+            # end - start / a billion to convert nanoseconds to seconds
+            duration = (span.end_timestamp - span.start_timestamp) / Float(10**9)
+            # Create attributes
+            #
+            attrs = {}
+            # pattern below goes
+            # stable convention
+            # attribute that matches rack spans (old convention)
+
+            # attrs['http.request.method']
+            attrs['http.method'] = span.attributes['http.method']
+
+            # attrs['url.scheme']
+            attrs['http.scheme'] = span.attributes['http.scheme']
+
+            # same in stable semconv
+            attrs['http.route'] = span.attributes['http.route']
+
+            # attrs['http.response.status.code']
+            attrs['http.status_code'] = span.attributes['http.status_code']
+
+            # attrs['server.address'] ???
+            # attrs['server.port'] ???
+            # span includes host and port
+            attrs['http.host'] = span.attributes['http.host']
+
+            # attrs not currently in span payload
+            # attrs['network.protocol.version']
+            # attrs['network.protocol.name']
+            attrs['error.type'] = span.status.description if span.status.code == OpenTelemetry::Trace::Status::ERROR
+
+            http_server_duration_histogram.record(duration, attributes: attrs)
+          end
+
           # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/data-http.md#name
           #
           # recommendation: span.name(s) should be low-cardinality (e.g.,
@@ -202,6 +242,7 @@ module OpenTelemetry
             token, span = request.env[OTEL_TOKEN_AND_SPAN]
             span.finish
             OpenTelemetry::Context.detach(token)
+            record_http_server_request_duration_metric(span)
           rescue StandardError => e
             OpenTelemetry.handle_error(exception: e)
           end
@@ -244,6 +285,26 @@ module OpenTelemetry
 
           def tracer
             OpenTelemetry::Instrumentation::Rack::Instrumentation.instance.tracer
+          end
+
+          def metrics_enabled?
+            OpenTelemetry::Instrumentation::Rack::Instrumentation.instance.metrics_enabled?
+          end
+
+          def meter
+            # warn if no meter?
+            return @meter if defined?(@meter)
+
+            @meter = metrics_enabled? ? OpenTelemetry::Instrumentation::Rack::Instrumentation.instance.meter : nil
+          end
+
+          def http_server_duration_histogram
+            # Only want to make the histogram once
+            # Need to implement advice so we can update the buckets to match seconds instead of ms
+            return @http_server_duration_histogram if defined?(@http_server_duration_histogram)
+
+            @http_server_duration_histogram = nil unless meter
+            @http_server_duration_histogram = meter.create_histogram('http.server.request.duration', unit: 's', description: 'Duration of HTTP server requests.')
           end
 
           def config
