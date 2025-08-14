@@ -189,7 +189,7 @@ module OpenTelemetry
         end
       end
 
-      attr_reader :name, :version, :config, :installed, :tracer
+      attr_reader :name, :version, :config, :installed, :tracer, :meter
 
       alias installed? installed
 
@@ -205,8 +205,19 @@ module OpenTelemetry
         @installed = false
         @options = options
         @tracer = OpenTelemetry::Trace::Tracer.new
+        # Do we want to conditionally create a meter overall?
+        # @meter = OpenTelemetry::Metrics::Meter.new if metrics_enabled?
       end
       # rubocop:enable Metrics/ParameterLists
+
+      def metrics_enabled?
+        # We need the API as a dependency to call metrics-y things in instrumentation
+        # However, the user needs to install it separately from base, because we
+        # do not want base to rely on experimental code
+        return @metrics_enabled if defined?(@metrics_enabled)
+
+        @metrics_enabled ||= defined?(OpenTelemetry::Metrics) && @config[:send_metrics]
+      end
 
       # Install instrumentation with the given config. The present? and compatible?
       # will be run first, and install will return false if either fail. Will
@@ -221,6 +232,7 @@ module OpenTelemetry
 
         instance_exec(@config, &@install_blk)
         @tracer = OpenTelemetry.tracer_provider.tracer(name, version)
+        @meter = OpenTelemetry.meter_provider.meter(name, version: version) if metrics_enabled?
         @installed = true
       end
 
